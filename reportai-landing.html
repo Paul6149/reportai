@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReportAI — Client Reports That Write Themselves</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0d0d0d;
+    --paper: #f5f2ec;
+    --accent: #1a4fff;
+    --accent-light: #e8eeff;
+    --muted: #6b6b6b;
+    --border: #d8d4cc;
+    --white: #ffffff;
+    --green: #0d6e3f;
+    --green-light: #e6f4ed;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    font-size: 16px;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* NAV */
+  nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 48px;
+    border-bottom: 1px solid var(--border);
+    background: var(--paper);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    font-family: 'Instrument Serif', serif;
+    font-size: 22px;
+    color: var(--ink);
+    text-decoration: none;
+    letter-spacing: -0.3px;
+  }
+  .logo span { color: var(--accent); }
+  nav ul { display: flex; gap: 32px; list-style: none; }
+  nav ul a { font-size: 14px; color: var(--muted); text-decoration: none; font-weight: 400; }
+  nav ul a:hover { color: var(--ink); }
+  .nav-cta {
+    background: var(--ink);
+    color: var(--white);
+    padding: 10px 22px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: opacity 0.2s;
+  }
+  .nav-cta:hover { opacity: 0.85; }
+
+  /* HERO */
+  .hero {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 100px 48px 80px;
+    text-align: center;
+  }
+  .hero-tag {
+    display: inline-block;
+    background: var(--accent-light);
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border-radius: 20px;
+    margin-bottom: 28px;
+  }
+  .hero h1 {
+    font-family: 'Instrument Serif', serif;
+    font-size: clamp(44px, 7vw, 76px);
+    line-height: 1.05;
+    letter-spacing: -1.5px;
+    color: var(--ink);
+    margin-bottom: 24px;
+  }
+  .hero h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+  .hero-sub {
+    font-size: 18px;
+    color: var(--muted);
+    max-width: 560px;
+    margin: 0 auto 40px;
+    font-weight: 300;
+    line-height: 1.65;
+  }
+  .hero-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+  .btn-primary {
+    background: var(--ink);
+    color: var(--white);
+    padding: 14px 32px;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: opacity 0.2s;
+    display: inline-block;
+  }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-secondary {
+    background: transparent;
+    color: var(--ink);
+    padding: 14px 32px;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: 400;
+    text-decoration: none;
+    border: 1px solid var(--border);
+    transition: border-color 0.2s;
+    display: inline-block;
+  }
+  .btn-secondary:hover { border-color: var(--ink); }
+  .hero-footnote {
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .hero-footnote strong { color: var(--ink); font-weight: 500; }
+
+  /* SOCIAL PROOF STRIP */
+  .proof-strip {
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 18px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 48px;
+    flex-wrap: wrap;
+    background: var(--white);
+  }
+  .proof-item {
+    font-size: 13px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .proof-item strong { color: var(--ink); font-size: 20px; font-family: 'Instrument Serif', serif; }
+
+  /* PROBLEM SECTION */
+  .problem {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 100px 48px;
+    text-align: center;
+  }
+  .section-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 20px;
+  }
+  .problem h2 {
+    font-family: 'Instrument Serif', serif;
+    font-size: clamp(32px, 4vw, 48px);
+    line-height: 1.15;
+    letter-spacing: -0.8px;
+    margin-bottom: 24px;
+  }
+  .problem p {
+    font-size: 17px;
+    color: var(--muted);
+    line-height: 1.7;
+    font-weight: 300;
+  }
+
+  /* QUOTE BLOCK */
+  .quote-block {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--accent);
+    max-width: 700px;
+    margin: 48px auto 0;
+    padding: 28px 36px;
+    border-radius: 8px;
+    text-align: left;
+  }
+  .quote-block blockquote {
+    font-family: 'Instrument Serif', serif;
+    font-size: 20px;
+    line-height: 1.5;
+    color: var(--ink);
+    margin-bottom: 16px;
+  }
+  .quote-block cite {
+    font-size: 13px;
+    color: var(--muted);
+    font-style: normal;
+  }
+
+  /* HOW IT WORKS */
+  .how {
+    background: var(--ink);
+    padding: 100px 48px;
+    color: var(--white);
+  }
+  .how-inner { max-width: 960px; margin: 0 auto; }
+  .how .section-label { color: rgba(255,255,255,0.4); margin-bottom: 16px; }
+  .how h2 {
+    font-family: 'Instrument Serif', serif;
+    font-size: clamp(32px, 4vw, 48px);
+    line-height: 1.15;
+    letter-spacing: -0.8px;
+    margin-bottom: 60px;
+    max-width: 600px;
+  }
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .step {
+    padding: 36px 32px;
+    border-right: 1px solid rgba(255,255,255,0.12);
+  }
+  .step:last-child { border-right: none; }
+  .step-num {
+    font-family: 'Instrument Serif', serif;
+    font-size: 48px;
+    color: rgba(255,255,255,0.12);
+    line-height: 1;
+    margin-bottom: 20px;
+  }
+  .step h3 {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--white);
+    margin-bottom: 10px;
+  }
+  .step p {
+    font-size: 14px;
+    color: rgba(255,255,255,0.55);
+    line-height: 1.6;
+    font-weight: 300;
+  }
+  .step-tag {
+    display: inline-block;
+    background: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.5);
+    font-size: 11px;
+    padding: 3px 9px;
+    border-radius: 4px;
+    margin-bottom: 14px;
+    letter-spacing: 0.04em;
+  }
+
+  /* REPORT PREVIEW */
+  .preview {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 100px 48px;
+  }
+  .preview .section-label { margin-bottom: 16px; }
+  .preview h2 {
+    font-family: 'Instrument Serif', serif;
+    font-size: clamp(30px, 4vw, 44px);
+    letter-spacing: -0.8px;
+    margin-bottom: 48px;
+    max-width: 520px;
+    line-height: 1.2;
+  }
+  .report-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .report-header {
+    background: var(--ink);
+    padding: 24px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .report-header .client-name {
+    font-family: 'Instrument Serif', serif;
+    font-size: 18px;
+    color: var(--white);
+  }
+  .report-header .report-date {
+    font-size: 13px;
+    color: rgba(255,255,255,0.5);
+  }
+  .report-body { padding: 32px; }
+  .metrics-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .metric {
+    background: var(--paper);
+    border-radius: 8px;
+    padding: 16px 20px;
+  }
+  .metric-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .metric-value { font-family: 'Instrument Serif', serif; font-size: 26px; color: var(--ink); }
+  .metric-delta { font-size: 12px; margin-top: 2px; }
+  .delta-up { color: var(--green); }
+  .delta-down { color: #c0392b; }
+
+  .ai-section {
+    border: 1px solid #c8deff;
+    background: #f0f5ff;
+    border-radius: 8px;
+    padding: 22px 26px;
+  }
+  .ai-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .ai-dot {
+    width: 7px; height: 7px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+  .ai-text {
+    font-size: 15px;
+    line-height: 1.75;
+    color: var(--ink);
+  }
+  .ai-text p { margin-bottom: 10px; }
+  .ai-text p:last-child { margin-bottom: 0; }
+
+  /* FEATURES */
+  .features {
+    background: var(--white);
+    padding: 100px 48px;
+  }
+  .features-inner { max-width: 960px; margin: 0 auto; }
+  .features .section-label { margin-bottom: 16px; }
+  .features h2 {
+    font-family: 'Instrument Serif', serif;
+    font-size: clamp(30px, 4vw, 44px);
+    letter-spacing: -0.8px;
+    margin-bottom: 60px;
+    max-width: 500px;
+    line-height: 1.2;
+  }
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 2px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .feature {
+    background: var(--white);
+    padding: 32px 28px;
+  }
+  .feature-icon {
+    width: 40px; height: 40px;
+    background: var(--paper);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    margin-bottom: 16px;
+  }
+  .feature h3 { font-size: 15px; font-weight: 500; margin-bottom: 8px; }
+  .feature p { font-size: 14px; color: var(--muted); line-height: 1.6; font-weight: 300; }
+
+  /* TESTIMONIALS */
+  .testimonials {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 100px 48px;
+  }
+  .testimonials .section-label { margin-bottom: 16px; }
+  .testimonials h2 {
+    font-family: 'Instrument Serif', serif;
+    font-size: clamp(30px, 4vw, 44px);
+    letter-spacing: -0.8px;
+    margin-bottom: 48px;
+    line-height: 1.2;
+  }
+  .testi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+  }
+  .testi {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 28px;
+  }
+  .stars { color: #f0a500; font-size: 14px; margin-bottom: 14px; letter-spacing: 2px; }
+  .testi blockquote {
+    font-size: 15px;
+    line-height: 1.65;
+    color: var(--ink);
+    margin-bottom: 20px;
+    font-weight: 300;
+  }
+  .testi-author { display: flex; align-items: center; gap: 12px; }
+  .avatar {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 500;
+    flex-shrink: 0;
+  }
+  .av1 { background: #e8eeff; color: #1a4fff; }
+  .av2 { background: #e6f4ed; color: #0d6e3f; }
+  .av3 { background: #fef3e2; color: #b45309; }
+  .author-name { font-size: 14px; font-weight: 500; }
+  .author-role { font-size: 12px; color: var(--muted); }
+
+  /* PRICING */
+  .pricing {
+    background: var(--paper);
+    padding: 100px 48px;
+    border-top: 1px solid var(--border);
+  }
+  .pricing-inner { max-width: 860px; margin: 0 auto; text-align: center; }
+  .pricing .section-label { margin-bottom: 16px; }
+  .pricing h2 {
+    font-family: 'Instrument Serif', serif;
+    font-size: clamp(30px, 4vw, 44px);
+    letter-spacing: -0.8px;
+    margin-bottom: 14px;
+    line-height: 1.2;
+  }
+  .pricing-sub {
+    font-size: 16px;
+    color: var(--muted);
+    margin-bottom: 48px;
+    font-weight: 300;
+  }
+  .founding-banner {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 8px;
+    padding: 14px 24px;
+    font-size: 14px;
+    color: #92400e;
+    margin-bottom: 36px;
+    display: inline-block;
+  }
+  .founding-banner strong { font-weight: 500; }
+  .plans {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+    text-align: left;
+  }
+  .plan {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 32px 28px;
+  }
+  .plan.popular {
+    border: 2px solid var(--accent);
+    position: relative;
+  }
+  .popular-badge {
+    position: absolute;
+    top: -13px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--accent);
+    color: var(--white);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 14px;
+    border-radius: 20px;
+    white-space: nowrap;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .plan-name { font-size: 13px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
+  .plan-price {
+    font-family: 'Instrument Serif', serif;
+    font-size: 48px;
+    color: var(--ink);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .plan-price sup { font-size: 22px; vertical-align: top; margin-top: 10px; font-family: 'DM Sans', sans-serif; font-weight: 300; }
+  .plan-orig { font-size: 13px; color: var(--muted); text-decoration: line-through; margin-bottom: 6px; }
+  .plan-period { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+  .plan-clients { font-size: 13px; font-weight: 500; color: var(--ink); margin-bottom: 24px; }
+  .plan-divider { height: 1px; background: var(--border); margin-bottom: 20px; }
+  .plan-features { list-style: none; }
+  .plan-features li {
+    font-size: 14px;
+    color: var(--muted);
+    padding: 6px 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-weight: 300;
+  }
+  .plan-features li::before { content: "✓"; color: var(--green); font-weight: 500; flex-shrink: 0; }
+  .plan-cta {
+    display: block;
+    text-align: center;
+    margin-top: 24px;
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: opacity 0.2s;
+  }
+  .plan-cta-dark { background: var(--ink); color: var(--white); }
+  .plan-cta-dark:hover { opacity: 0.85; }
+  .plan-cta-outline { background: transparent; color: var(--ink); border: 1px solid var(--border); }
+  .plan-cta-outline:hover { border-color: var(--ink); }
+  .plan-guarantee {
+    text-align: center;
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 32px;
+    font-weight: 300;
+  }
+
+  /* FAQ */
+  .faq {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 100px 48px;
+  }
+  .faq .section-label { margin-bottom: 16px; }
+  .faq h2 {
+    font-family: 'Instrument Serif', serif;
+    font-size: clamp(28px, 3.5vw, 40px);
+    letter-spacing: -0.6px;
+    margin-bottom: 48px;
+    line-height: 1.2;
+  }
+  .faq-item { border-top: 1px solid var(--border); padding: 22px 0; }
+  .faq-item:last-child { border-bottom: 1px solid var(--border); }
+  .faq-q { font-size: 16px; font-weight: 500; margin-bottom: 10px; }
+  .faq-a { font-size: 14px; color: var(--muted); line-height: 1.7; font-weight: 300; }
+
+  /* FINAL CTA */
+  .final-cta {
+    background: var(--ink);
+    padding: 100px 48px;
+    text-align: center;
+    color: var(--white);
+  }
+  .final-cta h2 {
+    font-family: 'Instrument Serif', serif;
+    font-size: clamp(36px, 5vw, 60px);
+    letter-spacing: -1px;
+    margin-bottom: 20px;
+    line-height: 1.1;
+  }
+  .final-cta h2 em { font-style: italic; color: rgba(255,255,255,0.55); }
+  .final-cta p {
+    font-size: 17px;
+    color: rgba(255,255,255,0.55);
+    margin-bottom: 40px;
+    font-weight: 300;
+    max-width: 480px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .final-cta .btn-white {
+    background: var(--white);
+    color: var(--ink);
+    padding: 16px 40px;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-block;
+    transition: opacity 0.2s;
+  }
+  .final-cta .btn-white:hover { opacity: 0.9; }
+  .final-cta .spots {
+    font-size: 13px;
+    color: rgba(255,255,255,0.35);
+    margin-top: 16px;
+  }
+
+  /* FOOTER */
+  footer {
+    padding: 32px 48px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    background: var(--paper);
+  }
+  footer .logo { font-size: 18px; }
+  footer p { font-size: 13px; color: var(--muted); }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .hero h1 { animation: fadeUp 0.6s ease forwards; }
+  .hero-sub { animation: fadeUp 0.6s 0.15s ease both; }
+  .hero-actions { animation: fadeUp 0.6s 0.25s ease both; }
+
+  @media (max-width: 600px) {
+    nav { padding: 16px 20px; }
+    nav ul { display: none; }
+    .hero, .problem, .preview, .testimonials, .faq, .features { padding-left: 20px; padding-right: 20px; }
+    .how, .pricing, .final-cta, footer { padding-left: 20px; padding-right: 20px; }
+    .proof-strip { gap: 24px; padding: 16px 20px; }
+    .step { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.12); }
+    .step:last-child { border-bottom: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="logo">Report<span>AI</span></a>
+  <ul>
+    <li><a href="#how">How it works</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+  </ul>
+  <a href="#pricing" class="nav-cta">Get founding access</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-tag">AI-powered agency reporting</div>
+  <h1>Client reports that<br><em>write themselves.</em></h1>
+  <p class="hero-sub">Connect your data once. ReportAI pulls the numbers, generates the narrative, and sends white-labeled reports to every client — automatically.</p>
+  <div class="hero-actions">
+    <a href="#pricing" class="btn-primary">Start free trial — 14 days</a>
+    <a href="#preview" class="btn-secondary">See a sample report</a>
+  </div>
+  <p class="hero-footnote"><strong>No credit card required.</strong> Setup takes under 20 minutes.</p>
+</section>
+
+<!-- SOCIAL PROOF STRIP -->
+<div class="proof-strip">
+  <div class="proof-item"><strong>8hrs</strong>&nbsp; saved per client, per month</div>
+  <div class="proof-item"><strong>3 min</strong>&nbsp; to generate a full client report</div>
+  <div class="proof-item"><strong>100%</strong>&nbsp; white-labeled — your brand, not ours</div>
+  <div class="proof-item"><strong>GA4 + Ads</strong>&nbsp; connected in one OAuth click</div>
+</div>
+
+<!-- PROBLEM -->
+<section class="problem">
+  <p class="section-label">The problem</p>
+  <h2>You're running an agency, not a data entry service.</h2>
+  <p>Every month your team opens dashboards, copies numbers into slides, writes summaries that say the same things, and sends the same report to 20 different clients. Hours disappear. Margins shrink. And none of it makes you a better agency — it just keeps the lights on.</p>
+  <div class="quote-block">
+    <blockquote>"I have 18 clients. We were spending 40 hours a month just on reports. I felt like we were paying three people to copy-paste."</blockquote>
+    <cite>— Sarah K., founder of a PPC agency managing $2.4M in ad spend</cite>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="how">
+  <div class="how-inner">
+    <p class="section-label">How it works</p>
+    <h2>From raw data to client-ready report in 3 minutes.</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <span class="step-tag">One-time setup</span>
+        <h3>Connect your accounts</h3>
+        <p>Link Google Analytics 4 and Google Ads via OAuth. No API keys, no developer required. Takes about 90 seconds per client.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <span class="step-tag">Automatic</span>
+        <h3>AI pulls and interprets the data</h3>
+        <p>ReportAI fetches your campaign data, calculates key metrics, spots trends, and identifies what moved — and why.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <span class="step-tag">The differentiator</span>
+        <h3>Narrative is written for you</h3>
+        <p>Not just charts. Full paragraphs. "CPL dropped 18% this month due to the audience expansion on Oct 3rd. We recommend…" Ready to send.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">04</div>
+        <span class="step-tag">Set and forget</span>
+        <h3>Reports delivered on schedule</h3>
+        <p>White-labeled PDFs with your logo go to every client automatically — weekly, monthly, or whenever you choose.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- REPORT PREVIEW -->
+<section class="preview" id="preview">
+  <p class="section-label">Sample output</p>
+  <h2>This is what your clients receive.</h2>
+  <div class="report-card">
+    <div class="report-header">
+      <div>
+        <div class="client-name">Acme Roofing Co. — Monthly Report</div>
+        <div class="report-date">November 2025 · Prepared by Apex Digital</div>
+      </div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.4);background:rgba(255,255,255,0.08);padding:6px 12px;border-radius:4px;">PDF · White-labeled</div>
+    </div>
+    <div class="report-body">
+      <div class="metrics-row">
+        <div class="metric">
+          <div class="metric-label">Impressions</div>
+          <div class="metric-value">84,200</div>
+          <div class="metric-delta delta-up">↑ 12% vs last month</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Clicks</div>
+          <div class="metric-value">3,140</div>
+          <div class="metric-delta delta-up">↑ 8%</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Cost per lead</div>
+          <div class="metric-value">$34</div>
+          <div class="metric-delta delta-up">↓ 18% — best ever</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Conversions</div>
+          <div class="metric-value">92</div>
+          <div class="metric-delta delta-up">↑ 22%</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Ad spend</div>
+          <div class="metric-value">$3,128</div>
+          <div class="metric-delta" style="color:var(--muted);">Within budget</div>
+        </div>
+      </div>
+      <div class="ai-section">
+        <div class="ai-label"><span class="ai-dot"></span>AI-generated summary</div>
+        <div class="ai-text">
+          <p>November was your strongest month this year. Cost per lead hit an all-time low of $34 — an 18% improvement over October — driven primarily by the expanded "homeowner 35–55" audience segment we introduced on November 3rd, which is now responsible for 41% of all conversions at a 24% lower CPL than your previous targeting.</p>
+          <p>Conversion volume also rose 22%, meaning you got more leads and paid less for each one. Total spend came in at $3,128 — $72 under your monthly budget.</p>
+          <p><strong>Recommendation for December:</strong> Increase budget on the new audience segment by 20–25% while maintaining the current ad creative, which is performing above benchmark. The "emergency roof repair" ad group is underperforming — we suggest pausing it and reallocating that $400/mo to the residential campaign.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <div class="features-inner">
+    <p class="section-label">Features</p>
+    <h2>Everything your team needs.<br>Nothing it doesn't.</h2>
+    <div class="features-grid">
+      <div class="feature">
+        <div class="feature-icon">⚡</div>
+        <h3>AI narrative summaries</h3>
+        <p>Claude AI writes the client-facing explanation of every report — what happened, why, and what to do next. Edit in one click or send as-is.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🔗</div>
+        <h3>GA4 + Google Ads integration</h3>
+        <p>Connect via OAuth in under 2 minutes. Data syncs automatically before every report. No spreadsheet exports, no copy-pasting.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🎨</div>
+        <h3>Full white-labeling</h3>
+        <p>Upload your logo, set your brand colors, use your own domain. Clients see your agency — not ReportAI. Always.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">📅</div>
+        <h3>Scheduled auto-delivery</h3>
+        <p>Set weekly or monthly cadences per client. Reports are generated and emailed automatically — even while you sleep.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🏢</div>
+        <h3>Multi-client dashboard</h3>
+        <p>See every client's report status in one view. Spot underperformers, approve drafts, and manage your whole book of business from one login.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">📄</div>
+        <h3>Beautiful PDF exports</h3>
+        <p>Pixel-perfect PDFs that look like they were designed by a senior account manager. Charts, tables, and narrative in a format clients actually read.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="testimonials">
+  <p class="section-label">Early feedback</p>
+  <h2>What founding members are saying.</h2>
+  <div class="testi-grid">
+    <div class="testi">
+      <div class="stars">★★★★★</div>
+      <blockquote>"We used to spend 40 hours a month on reports across our team. Now it's under 4. The AI summaries are genuinely better than what we were writing ourselves."</blockquote>
+      <div class="testi-author">
+        <div class="avatar av1">SK</div>
+        <div>
+          <div class="author-name">Sarah K.</div>
+          <div class="author-role">Founder, PPC agency · 18 clients</div>
+        </div>
+      </div>
+    </div>
+    <div class="testi">
+      <div class="stars">★★★★★</div>
+      <blockquote>"My clients actually comment on the reports now. Before, I don't think anyone read them. The narrative section makes it feel like we're giving real strategic advice."</blockquote>
+      <div class="testi-author">
+        <div class="avatar av2">MR</div>
+        <div>
+          <div class="author-name">Marcus R.</div>
+          <div class="author-role">Owner, digital agency · 12 clients</div>
+        </div>
+      </div>
+    </div>
+    <div class="testi">
+      <div class="stars">★★★★★</div>
+      <blockquote>"I was skeptical the AI would get the context right. It does. It noticed a campaign shift I'd made and attributed the improvement to it correctly. Blew my mind."</blockquote>
+      <div class="testi-author">
+        <div class="avatar av3">JP</div>
+        <div>
+          <div class="author-name">Jordan P.</div>
+          <div class="author-role">Freelance media buyer · 7 clients</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing" id="pricing">
+  <div class="pricing-inner">
+    <p class="section-label">Pricing</p>
+    <h2>Simple, honest pricing.</h2>
+    <p class="pricing-sub">No per-client fees. No hidden costs. One price, all features.</p>
+    <div class="founding-banner">
+      <strong>Founding member offer:</strong> First 20 agencies lock in 40% off — forever. 14 spots remaining.
+    </div>
+    <div class="plans">
+      <div class="plan">
+        <div class="plan-name">Starter</div>
+        <div class="plan-price"><sup>$</sup>79</div>
+        <div class="plan-orig">Regular price: $129/mo</div>
+        <div class="plan-period">per month, billed monthly</div>
+        <div class="plan-clients">Up to 5 clients</div>
+        <div class="plan-divider"></div>
+        <ul class="plan-features">
+          <li>GA4 + Google Ads integration</li>
+          <li>AI narrative summaries</li>
+          <li>White-labeled PDF reports</li>
+          <li>Automated monthly delivery</li>
+          <li>Multi-client dashboard</li>
+          <li>Email support</li>
+        </ul>
+        <a href="#" class="plan-cta plan-cta-outline">Start free trial</a>
+      </div>
+      <div class="plan popular">
+        <div class="popular-badge">Most popular</div>
+        <div class="plan-name">Agency</div>
+        <div class="plan-price"><sup>$</sup>149</div>
+        <div class="plan-orig">Regular price: $249/mo</div>
+        <div class="plan-period">per month, billed monthly</div>
+        <div class="plan-clients">Up to 20 clients</div>
+        <div class="plan-divider"></div>
+        <ul class="plan-features">
+          <li>Everything in Starter</li>
+          <li>Meta Ads integration</li>
+          <li>Client portal access</li>
+          <li>Weekly + monthly cadences</li>
+          <li>Custom AI tone per client</li>
+          <li>Priority support + onboarding call</li>
+        </ul>
+        <a href="#" class="plan-cta plan-cta-dark">Get founding access</a>
+      </div>
+      <div class="plan">
+        <div class="plan-name">Scale</div>
+        <div class="plan-price"><sup>$</sup>299</div>
+        <div class="plan-orig">Regular price: $499/mo</div>
+        <div class="plan-period">per month, billed monthly</div>
+        <div class="plan-clients">Unlimited clients</div>
+        <div class="plan-divider"></div>
+        <ul class="plan-features">
+          <li>Everything in Agency</li>
+          <li>SEO rank tracking</li>
+          <li>API access</li>
+          <li>Custom integrations</li>
+          <li>Team seats (up to 10)</li>
+          <li>Dedicated account manager</li>
+        </ul>
+        <a href="#" class="plan-cta plan-cta-outline">Start free trial</a>
+      </div>
+    </div>
+    <p class="plan-guarantee">14-day free trial on all plans · Cancel anytime · No setup fees</p>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq">
+  <p class="section-label">Questions</p>
+  <h2>Everything you need to know.</h2>
+
+  <div class="faq-item">
+    <p class="faq-q">We already use AgencyAnalytics. Why would we switch?</p>
+    <p class="faq-a">You don't have to. AgencyAnalytics shows your data — ReportAI explains it. The narrative summary (the paragraph your account manager currently writes manually) is what we automate. Many agencies use both: AgencyAnalytics for internal dashboards, ReportAI for client-facing reports.</p>
+  </div>
+  <div class="faq-item">
+    <p class="faq-q">How accurate is the AI summary?</p>
+    <p class="faq-a">Very. It pulls directly from your campaign data, so all numbers are exact. The narrative is generated by Claude (Anthropic's AI), which is specifically good at interpreting marketing data in context. You can always edit before sending — but most users don't need to.</p>
+  </div>
+  <div class="faq-item">
+    <p class="faq-q">Will my clients know it's AI-generated?</p>
+    <p class="faq-a">Only if you tell them. Reports are fully white-labeled with your branding, and the narrative reads like it was written by a senior account manager — because it's trained on exactly that kind of writing.</p>
+  </div>
+  <div class="faq-item">
+    <p class="faq-q">How long does setup actually take?</p>
+    <p class="faq-a">Under 20 minutes for your first client. You connect Google Ads and GA4 via OAuth (no API keys), upload your logo, and set your delivery schedule. After that, each additional client takes about 3 minutes to add.</p>
+  </div>
+  <div class="faq-item">
+    <p class="faq-q">What's the founding member offer?</p>
+    <p class="faq-a">The first 20 agencies get 40% off their chosen plan, locked in forever — even as we raise prices. In exchange, we ask for early feedback and a testimonial if you love it. We're at 6 of 20 spots filled as of this week.</p>
+  </div>
+  <div class="faq-item">
+    <p class="faq-q">Do you offer annual billing?</p>
+    <p class="faq-a">Yes — annual plans are available at 2 months free (equivalent to ~17% off monthly pricing). Founding members can also opt for a one-time annual payment at the discounted rate.</p>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="final-cta">
+  <h2>Stop writing reports.<br><em>Start sending them.</em></h2>
+  <p>Join 20 founding agencies and reclaim 8+ hours per client, per month. Starting today.</p>
+  <a href="#pricing" class="btn-white">Start your free 14-day trial</a>
+  <p class="spots">14 founding spots remaining · No credit card required</p>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <a href="#" class="logo">Report<span>AI</span></a>
+  <p>© 2026 ReportAI. Built for agencies that value their time.</p>
+  <p style="font-size:13px;color:var(--muted);">Privacy · Terms</p>
+</footer>
+
+</body>
+</html>
